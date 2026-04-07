@@ -9,6 +9,14 @@
 #     Fichero: script automatización ejecución por lotes 
 #****************************************************************/
 
+#COMO CORRER:
+#make
+#chmod +x lanzador.pl
+#./lanzador.pl
+# O
+# perl lanzador.pl
+
+
 # Obtiene la ruta del proyecto 
 $Path = `pwd`;
 chomp($Path);
