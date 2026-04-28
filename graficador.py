@@ -40,49 +40,62 @@ for raiz, directorios, archivos in os.walk(directorio_base):
 df = pd.DataFrame(datos)
 print(f"Se procesaron {len(df)} combinaciones exitosamente.\n")
 
-# =====================================================================
-# 4. GENERACIÓN MASIVA DE GRÁFICAS DETALLADAS Y TABLAS CSV
-# =====================================================================
+# 4. Generar Gráficas con Seaborn
 sns.set_theme(style="whitegrid")
 
-carpeta_graficas = 'Graficas_Detalladas'
-os.makedirs(carpeta_graficas, exist_ok=True)
+# Gráfica A: Comparativa en BARRAS de las 4 Máquinas para la matriz 2048 (PosixFxC)
+plt.figure(figsize=(10, 6))
+df_2048_posix = df[(df['Tamaño Matriz'] == 2048) & (df['Algoritmo'] == 'mxmPosixFxC')]
 
-print("Generando 48 gráficas individuales y sus tablas CSV... Esto tomará unos segundos.")
+if not df_2048_posix.empty:
+    # Cambiamos lineplot por barplot
+    sns.barplot(data=df_2048_posix, x='Hilos', y='Tiempo Promedio (s)', hue='Máquina', palette='muted')
 
-for algo in df['Algoritmo'].unique():
-    for tam in df['Tamaño Matriz'].unique():
-        for hilo in df['Hilos'].unique():
+    plt.title('Comparativa de Rendimiento - Matriz 2048x2048 (PosixFxC)')
+    plt.ylabel('Tiempo Promedio de Ejecución (Segundos)')
+    plt.xlabel('Cantidad de Hilos')
+    plt.savefig('grafica_barras_maquinas_2048.png', dpi=300)
+plt.close()
 
-            df_filtrado = df[(df['Algoritmo'] == algo) &
-                             (df['Tamaño Matriz'] == tam) &
-                             (df['Hilos'] == hilo)]
+# Gráfica B
+primera_maquina = df['Máquina'].iloc[0] if not df.empty else "Desconocida"
+plt.figure(figsize=(10, 6))
+df_maq = df[(df['Máquina'] == primera_maquina) & (df['Tamaño Matriz'] == 1024)]
+if not df_maq.empty:
+    sns.lineplot(data=df_maq, x='Hilos', y='Tiempo Promedio (s)', hue='Algoritmo', marker='s', linewidth=2)
+    plt.title(f'Rendimiento de Algoritmos en {primera_maquina} - Matriz 1024x1024')
+    plt.ylabel('Tiempo Promedio (Segundos)')
+    plt.xlabel('Número de Hilos / Procesos')
+    plt.xticks([1, 4, 8, 16])
+    plt.savefig('grafica_algoritmos_1024.png', dpi=300)
+plt.close()
 
-            if not df_filtrado.empty:
-                # Nombre base para que la imagen y el CSV se llamen igual
-                nombre_base = f"{algo}_Matriz{tam}_Hilos{hilo}"
+# 5. Exportar Consolidado Base
+df.sort_values(by=['Máquina', 'Algoritmo', 'Tamaño Matriz', 'Hilos']).to_csv('1_tabla_consolidada_base.csv', index=False)
+print("-> 1_tabla_consolidada_base.csv generada.")
 
-                # --- NUEVO: Exportar los datos exactos de la gráfica a CSV ---
-                ruta_csv = os.path.join(carpeta_graficas, f"Tabla_{nombre_base}.csv")
-                # Solo guardamos las columnas que importan para esta vista
-                df_filtrado[['Máquina', 'Tiempo Promedio (s)']].to_csv(ruta_csv, index=False)
+# =====================================================================
+# 6. ARCHIVOS ADICIONALES DE PROMEDIOS
+# =====================================================================
 
-                # --- Generar la gráfica ---
-                plt.figure(figsize=(8, 6))
+# A) Promedio Global por Máquina
+df_promedio_maquina = df.groupby('Máquina')['Tiempo Promedio (s)'].mean().reset_index()
+df_promedio_maquina.to_csv('2_promedios_globales_por_maquina.csv', index=False)
+print("-> 2_promedios_globales_por_maquina.csv generado.")
 
-                sns.barplot(data=df_filtrado, x='Máquina', y='Tiempo Promedio (s)', hue='Máquina', palette='viridis',
-                            legend=False)
+# B) Promedio por Algoritmo y Tamaño de Matriz
+df_promedio_algo_matriz = df.groupby(['Algoritmo', 'Tamaño Matriz'])['Tiempo Promedio (s)'].mean().reset_index()
+df_promedio_algo_matriz.to_csv('3_promedios_por_algoritmo_y_matriz.csv', index=False)
+print("-> 3_promedios_por_algoritmo_y_matriz.csv generado.")
 
-                plt.title(f'Rendimiento: {algo} | Matriz {tam}x{tam} | {hilo} Hilo(s)', pad=20, fontsize=14)
-                plt.ylabel('Tiempo Promedio de Ejecución (Segundos)')
-                plt.xlabel('Sistema de Cómputo (Máquina)')
+# C) Tabla Cruzada (Pivot Table): AHORA INCLUYE HILOS
+# Esto organizará los datos por Máquina -> Tamaño -> Hilos en las filas
+tabla_cruzada = pd.pivot_table(df,
+                                values='Tiempo Promedio (s)',
+                                index=['Máquina', 'Tamaño Matriz', 'Hilos'],
+                                columns=['Algoritmo'],
+                                aggfunc='mean')
+tabla_cruzada.to_csv('4_tabla_cruzada_resumen.csv')
+print("-> 4_tabla_cruzada_resumen.csv generada (incluye Hilos).")
 
-                plt.xticks(rotation=45, ha='right')
-
-                ruta_guardado = os.path.join(carpeta_graficas, f"Grafica_{nombre_base}.png")
-
-                plt.tight_layout(pad=2.0)
-                plt.savefig(ruta_guardado, dpi=300)
-                plt.close()
-
-print(f"¡Gráficas individuales y tablas CSV guardadas en la carpeta '{carpeta_graficas}' sin solapamientos!")
+print("\n¡Listo! Las tablas y gráficas se han actualizado con el desglose de hilos.")
