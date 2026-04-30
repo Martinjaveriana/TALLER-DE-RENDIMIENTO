@@ -7,44 +7,41 @@
 
 ## 📋 Descripción
 
-Este repositorio contiene el desarrollo completo del Taller de Evaluación de Rendimiento de la materia **Sistemas Operativos**. El objetivo es comparar el rendimiento de dos algoritmos de multiplicación de matrices (**Filas por Columnas** y **Filas por Transpuestas**) bajo distintos niveles de concurrencia (hilos POSIX y procesos Fork), ejecutados en 6 sistemas de cómputo con Linux.
+Este repositorio contiene el desarrollo completo del Taller de Evaluación de Rendimiento de la materia **Sistemas Operativos**. El objetivo es comparar el rendimiento de dos algoritmos de multiplicación de matrices (**Filas por Columnas** y **Filas por Transpuestas**) bajo distintos niveles de concurrencia (hilos POSIX y procesos Fork), ejecutados en 6 sistemas de cómputo con distribuciones Linux.
 
 ---
 
 ## 🗂️ Estructura del Repositorio
 
-```
-TALLER-DE-RENDIMIENTO/
-│
-├── src/                        # Código fuente en C
-│   ├── moduloMM.c              # Módulo con los algoritmos de multiplicación
-│   ├── moduloMM.h              # Cabecera del módulo
-│   ├── mxmPosixFxC.c          # Multiplicación POSIX - Filas por Columnas
-│   ├── mxmPosixFxT.c          # Multiplicación POSIX - Filas por Transpuestas
-│   ├── mxmForkFxC.c           # Multiplicación Fork - Filas por Columnas
-│   └── mxmForkFxT.c           # Multiplicación Fork - Filas por Transpuestas
-│
-├── bin/                        # Binarios compilados (generados con make)
-│
-├── Soluciones/                 # Archivos .dat con los tiempos crudos por máquina
-│   ├── <Máquina>/
-│   │   └── <algoritmo>-<tamaño>-Hilos-<n>.dat
-│
-├── Graficas_Detalladas/        # Gráficas de barras por combinación + CSVs
-├── Graficas_Escalabilidad/     # Gráficas de líneas de escalabilidad por máquina
-│
-├── Makefile                    # Compila todos los ejecutables
-├── lanzador.pl                 # Script Perl de automatización de experimentos
-│
-├── consolidar_datos.py         # Script Python — Fase 1: consolida .dat → CSV + gráficas resumen
-├── graficar_escalabilidad.py   # Script Python — Fase 2: genera gráficas de escalabilidad
-│
-├── 1_tabla_consolidada_base.csv
-├── 2_promedios_globales_por_maquina.csv
-├── 3_promedios_por_algoritmo_y_matriz.csv
-├── 4_tabla_cruzada_resumen.csv
-│
-└── README.md
+```text
+.
+├── bin/                            # Binarios compilados
+│   ├── mxmForkFxC
+│   ├── mxmForkFxT
+│   ├── mxmPosixFxC
+│   └── mxmPosixFxT
+├── src/                            # Código fuente en C
+│   ├── moduloMM.c                  # Módulo con la lógica matemática
+│   ├── moduloMM.h                  # Cabecera del módulo
+│   ├── mxmForkFxC.c                # Multiplicación Fork - Filas por Columnas
+│   ├── mxmForkFxT.c                # Multiplicación Fork - Filas por Transpuestas
+│   ├── mxmPosixFxC.c               # Multiplicación POSIX - Filas por Columnas
+│   └── mxmPosixFxT.c               # Multiplicación POSIX - Filas por Transpuestas
+├── Soluciones/                     # Resultados crudos (.dat) organizados por máquina
+│   ├── Soluciones-Escritorio-1/
+│   ├── Soluciones-escritorio-2/
+│   ├── Soluciones-Maquina-Virutal/
+│   ├── Soluciones-Pc-1/
+│   ├── Soluciones-Pc-2/
+│   └── Soluciones-Pc-Martin/
+├── graficador.py                   # Suite de procesamiento de datos y graficación
+├── graficador2.py                  # Suite de procesamiento de datos y graficación
+├── graficador3.py                  # Suite de procesamiento de datos y graficación
+├── graficador4.py                  # Suite de procesamiento de datos y graficación
+├── lanzador.pl                     # Script Perl de automatización de experimentos
+├── Makefile                        # Orquestador de compilación
+├── Taller Rendimiento FINAL.pdf    # Informe final documentado del proyecto
+└── README.md                       # Documentación del repositorio
 ```
 
 ---
@@ -52,88 +49,72 @@ TALLER-DE-RENDIMIENTO/
 ## ⚙️ Requisitos
 
 **Para compilar y ejecutar los experimentos:**
-- Linux (Ubuntu recomendado)
-- GCC con soporte para `-lpthread`
-- Perl 5+
+*   Linux (Ubuntu/Debian recomendado)
+*   GCC con soporte para la biblioteca `pthread`
+*   Perl 5+
 
-**Para el análisis de datos:**
-- Python 3.8+
-- Pandas, Seaborn, Matplotlib
+**Para el procesamiento de datos y visualización:**
+*   Python 3.8+
+*   Bibliotecas: `pandas`, `seaborn`, `matplotlib`
 
-Instalación de dependencias Python:
+*Instalación de dependencias de Python:*
 ```bash
 pip install pandas seaborn matplotlib
 ```
 
 ---
 
-## 🚀 Cómo reproducir el experimento
+## 🚀 Reproducción del Experimento
 
-### 1. Compilar los binarios
+### 1. Compilación
+Ejecutar el Makefile para compilar el código fuente y generar los ejecutables en la carpeta `bin/`.
 ```bash
 make All
 ```
 
-### 2. Crear la carpeta de resultados y dar permisos
+### 2. Permisos de Ejecución
+Otorgar permisos a los binarios y al script automatizador.
 ```bash
-mkdir -p Soluciones
 chmod +x bin/*
 chmod +x lanzador.pl
 ```
 
-### 3. Ejecutar la batería de experimentos
+### 3. Ejecución de la Batería de Pruebas
 ```bash
 ./lanzador.pl
 ```
-Esto ejecutará automáticamente **1,440 corridas** (4 algoritmos × 3 tamaños × 4 niveles de hilos × 30 repeticiones) y guardará los tiempos en archivos `.dat` dentro de `Soluciones/`.
+Este script compilará el código y ejecutará automáticamente las iteraciones definidas (30 por defecto) para cada combinación de matriz, algoritmo, mecanismo de concurrencia y máquina, exportando los tiempos a la carpeta `Soluciones/`.
 
-> ⚠️ **Importante:** La ruta del proyecto no debe contener espacios. Si tu ruta tiene espacios (ej. `semestre_ 2026_01`), copia el proyecto a una ruta limpia:
-> ```bash
-> cp -r /ruta/con\ espacios/TALLER-DE-RENDIMIENTO ~/taller
-> cd ~/taller
-> ```
-
-### 4. Verificar que los resultados sean correctos
+### 4. Verificación de Integridad de Datos
+Para confirmar que la recolección automatizada fue exitosa:
 ```bash
-# Debe mostrar 48 archivos
-ls Soluciones/ | wc -l
+# Deben existir exactamente 48 archivos por cada una de las 6 máquinas (288 en total)
+ls Soluciones/*/*.dat | wc -l
 
-# Todos deben tener exactamente 30 líneas
-wc -l Soluciones/*.dat
+# Cada archivo debe contener exactamente 30 líneas (correspondientes a las iteraciones para la Ley de los Grandes Números)
+wc -l Soluciones/*/*.dat
 ```
 
 ---
 
-## 📊 Análisis de Datos (Scripts Python)
+## 📊 Análisis y Visualización (Scripts Python)
 
-Los scripts deben ejecutarse desde la raíz del proyecto, **donde están los archivos `.dat`**.
+El repositorio cuenta con un conjunto de scripts en Python (`graficador.py` a `graficador4.py`) diseñados para leer los archivos crudos generados en la fase de recolección, calcular las medias aritméticas para mitigar el ruido computacional (OS Jitter), y generar las gráficas comparativas de escalabilidad, saturación de hardware y *overhead*.
 
-### Fase 1 — Consolidación y gráficas de barras
+Para ejecutar la suite de graficación:
 ```bash
-python3 consolidar_datos.py
+python3 graficador.py
+python3 graficador2.py
+python3 graficador3.py
+python3 graficador4.py
 ```
-**Genera:**
-- `1_tabla_consolidada_base.csv` — todos los promedios consolidados
-- `2_promedios_globales_por_maquina.csv`
-- `3_promedios_por_algoritmo_y_matriz.csv`
-- `4_tabla_cruzada_resumen.csv`
-- `Graficas_Detalladas/` — 48 gráficas de barras + CSV por combinación
-
-### Fase 2 — Gráficas de escalabilidad
-```bash
-python3 graficar_escalabilidad.py
-```
-**Requiere:** que `1_tabla_consolidada_base.csv` ya exista (correr Fase 1 primero).
-
-**Genera:**
-- `Graficas_Escalabilidad/` — gráficas de líneas (Hilos vs Tiempo) por máquina y algoritmo
 
 ---
 
 ## 🖥️ Sistemas de Cómputo Evaluados
 
-| ID | CPU | Núcleos | Frec. Máx. | L2 | L3 | RAM | Tipo |
-|---|---|---|---|---|---|---|---|
+| ID | CPU | Núcleos Lógicos | Frec. Máx. | L2 | L3 | RAM | Tipo |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | PC-1 | Intel Core i7-6500U | 4 | 3.1 GHz | 0.5 MiB | 4 MiB | 7.8 GiB | Portátil |
 | PC-2 | Intel Core i7-6500U | 4 | 3.1 GHz | 0.5 MiB | 4 MiB | 7.8 GiB | Portátil |
 | Escritorio-1 | Intel Core i7-6700T | 8 | 3.6 GHz | 1.0 MiB | 8 MiB | 7.8 GiB | Desktop |
@@ -145,26 +126,22 @@ python3 graficar_escalabilidad.py
 
 ## 🔬 Variables Experimentales
 
-| Variable | Valores |
-|---|---|
-| Algoritmos | FxC (Filas×Columnas), FxT (Filas×Transpuestas) |
-| Mecanismo de concurrencia | POSIX Threads, Fork |
-| Tamaño de matriz | 512×512, 1024×1024, 2048×2048 |
-| Nivel de concurrencia | 1, 4, 8, 16 hilos/procesos |
-| Repeticiones por combinación | 30 |
-| Métrica principal | Tiempo promedio de ejecución (segundos) |
+| Variable | Valores Evaluados |
+| :--- | :--- |
+| **Algoritmos Matemáticos** | FxC (Filas × Columnas), FxT (Filas × Transpuestas) |
+| **Mecanismos de Concurrencia**| POSIX Threads (Memoria Compartida), Fork (Memoria Aislada) |
+| **Tamaño de la Carga O(N^3)** | 512x512, 1024x1024, 2048x2048 |
+| **Nivel de Concurrencia** | 1, 4, 8, 16 CPUs (unidades de ejecución) |
+| **Repeticiones (Muestra)** | 30 iteraciones consecutivas por configuración |
 
 ---
 
 ## 📝 Hallazgos Principales
 
-- **FxT es consistentemente más rápido que FxC** gracias al aprovechamiento de localidad espacial en caché (Row-Major Order en C).
-- **POSIX Threads supera a Fork** por compartir el espacio de memoria, eliminando el overhead de crear procesos independientes.
-- **El overhead de concurrencia domina en matrices pequeñas** (512×512): usar 16 hilos puede ser menos eficiente que la ejecución secuencial.
-- **Existe un límite físico de hardware** (Ley de Amdahl): en equipos con 4 núcleos, solicitar 8 o 16 hilos no genera mejora adicional.
+Los resultados empíricos y los análisis técnicos detallados se encuentran documentados en el informe final (`Taller Rendimiento FINAL.pdf`). Las conclusiones arquitectónicas más destacadas son:
 
----
-
-## 📄 Informe
-
-El informe completo en PDF se encuentra en la raíz del repositorio e incluye introducción, diseño experimental, análisis de resultados con gráficas y conclusiones.
+*   **Supremacía de la Localidad Espacial:** El algoritmo FxT es significativamente superior a FxC al respetar el almacenamiento *Row-Major Order* del lenguaje C, mitigando la abrumadora penalización temporal de los fallos de caché (*cache misses*).
+*   **Punto de Quiebre Arquitectónico:** POSIX Threads superó consistentemente la creación de procesos (*Fork*), consolidándose como la arquitectura ideal para cargas masivas. El mecanismo Fork demostró no ser escalable para matrices pesadas (2048x2048) debido a la colosal demanda de memoria y procesos de aislamiento.
+*   **Penalización Administrativa:** En cargas de trabajo ligeras (512x512), el *overhead* de concurrencia administrado por el Kernel es mayor que el beneficio del paralelismo, provocando que la ejecución con 16 hilos sea menos eficiente que la puramente secuencial.
+*   **Límites Físicos y Ley de Amdahl:** Al saturar equipos de 4 u 8 núcleos con 16 unidades de ejecución solicitadas por software, las curvas de rendimiento se estancan por completo producto de los continuos cambios de contexto (*context switching*).
+*   **El Impacto de la Brecha Generacional:** El PC-Martin fue la única arquitectura capaz de mantener un paralelismo físico real con 16 unidades de ejecución simultáneas, demostrando que frente a cargas de tipo *Memory-bound*, una memoria Caché L3 masiva (24 MiB) y una alta densidad de núcleos superan la simple velocidad bruta de reloj.
